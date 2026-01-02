@@ -111,8 +111,14 @@ class RoboteventsScraper(BaseScraper):
     BASE_URL = "https://www.robotevents.com"
     API_URL = "https://www.robotevents.com/api/v2"
     
-    async def fetch_team_matches(self, team_number: str, event_id: str = None) -> List[Dict[str, Any]]:
-        """Fetch team matches from RobotEvents V5RC API"""
+    async def fetch_team_matches(self, team_number: str, event_id: str = None) -> Dict[str, Any]:
+        """Fetch team matches from RobotEvents V5RC API
+        
+        Returns:
+            Dict with keys:
+            - 'matches': List of match dictionaries
+            - 'team_info': Dict with team information (name, organization, region, etc.)
+        """
         
         cache_key = f"robotevents_{team_number}_{event_id or 'all'}"
         cached = self.cache.get(cache_key)
@@ -123,31 +129,51 @@ class RoboteventsScraper(BaseScraper):
         # Check if API key is configured
         api_key = settings.ROBOTEVENTS_API_KEY if hasattr(settings, 'ROBOTEVENTS_API_KEY') else None
         
+        print(f"\n{'='*60}")
+        print(f"🔍 Attempting to fetch data for team: {team_number}")
+        print(f"   Event filter: {event_id or 'ALL'}")
+        print(f"   API Key configured: {'Yes' if api_key and api_key.strip() else 'No'}")
+        print(f"   API Key preview: {api_key[:20] + '...' if api_key and len(api_key) > 20 else 'None'}")
+        print(f"{'='*60}\n")
+        
         if not api_key or api_key.strip() == "":
             print("⚠️  No RobotEvents API Key configured")
-            print("ℹ️  Using mock data for demonstration")
             print("💡 To use real data, apply for API key at:")
             print("   https://www.robotevents.com/api/v2/accessRequest/create")
-            matches = await self._fetch_mock_data(team_number, event_id or "DEMO")
-            self.cache.set(cache_key, matches)
-            return matches
+            print("❌ Returning empty match list (no mock data)")
+            # Return empty list instead of mock data
+            return {"matches": [], "team_info": None}
         
         try:
             print(f"🔄 Attempting to fetch real data from RobotEvents API...")
-            matches = await self._fetch_from_api(team_number, event_id)
+            result = await self._fetch_from_api(team_number, event_id)
+            matches = result.get("matches", [])
+            team_info = result.get("team_info")
             print(f"✓ Successfully fetched {len(matches)} matches from RobotEvents")
+            print(f"✓ Data source: REAL API DATA")
+            if team_info:
+                print(f"✓ Team info: {team_info.get('team_name')} - {team_info.get('organization')}")
         except Exception as e:
             print(f"❌ Failed to fetch from RobotEvents API: {e}")
-            print("⚠️  Falling back to mock data")
-            # Fallback to mock data for demo
-            matches = await self._fetch_mock_data(team_number, event_id or "DEMO")
+            print(f"❌ Error type: {type(e).__name__}")
+            print(f"❌ Error details: {str(e)}")
+            print("❌ Returning empty match list (no fallback to mock data)")
+            # Return empty list instead of mock data
+            result = {"matches": [], "team_info": None}
         
-        self.cache.set(cache_key, matches)
-        return matches
+        self.cache.set(cache_key, result)
+        return result
     
-    async def _fetch_from_api(self, team_number: str, event_id: str = None) -> List[Dict[str, Any]]:
-        """Fetch real data from RobotEvents V5RC API"""
+    async def _fetch_from_api(self, team_number: str, event_id: str = None) -> Dict[str, Any]:
+        """Fetch real data from RobotEvents V5RC API
+        
+        Returns dict with 'matches' and 'team_info'
+        """
         matches = []
+        team_info = None
+        
+        print(f"   📡 Connecting to RobotEvents API...")
+        print(f"   API URL: {self.API_URL}")
         
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             # Step 1: Search for team
@@ -156,45 +182,84 @@ class RoboteventsScraper(BaseScraper):
                 "Accept": "application/json"
             }
             
+            print(f"   🔍 Step 1: Searching for team {team_number}...")
+            
             # Search team by number
+            # 注意: 不使用 program 参数，因为 RobotEvents API 在使用该参数时可能返回空结果
             team_response = await client.get(
                 f"{self.API_URL}/teams",
                 params={
-                    "number": team_number,
-                    "program": "V5RC"  # VEX V5 Robotics Competition
+                    "number": team_number
+                    # program 信息会在返回的队伍数据中包含
                 },
                 headers=headers
             )
             
+            print(f"   📊 Team search response: {team_response.status_code}")
+            
             if team_response.status_code != 200:
-                raise Exception(f"Team search failed: {team_response.status_code}")
+                print(f"   ❌ Team search failed with status {team_response.status_code}")
+                print(f"   Response: {team_response.text[:200]}")
+                raise Exception(f"Team search failed: {team_response.status_code} - {team_response.text[:100]}")
             
             teams_data = team_response.json()
             if not teams_data.get("data"):
-                raise Exception(f"Team {team_number} not found")
+                print(f"   ❌ No teams found for {team_number}")
+                raise Exception(f"Team {team_number} not found in RobotEvents database")
             
             team = teams_data["data"][0]
             team_id = team["id"]
+            team_name = team.get("team_name", "Unknown")
             
-            # Step 2: Get team's matches
-            matches_params = {
-                "team[]": team_id,
-                "season[]": "181"  # Current season (adjust as needed)
+            # Extract team information
+            location = team.get("location", {})
+            team_info = {
+                "team_number": team.get("number", team_number),
+                "team_name": team_name,
+                "robot_name": team.get("robot_name"),
+                "organization": team.get("organization", "Unknown"),
+                "region": f"{location.get('city', '')}, {location.get('region', '')}".strip(", ") or "Unknown",
+                "grade": team.get("grade")
             }
             
-            if event_id:
+            print(f"   ✓ Found team: {team_name} (ID: {team_id})")
+            print(f"   📍 Location: {team_info['region']}")
+            print(f"   🏢 Organization: {team_info['organization']}")
+            print(f"   🔍 Step 2: Fetching matches for team ID {team_id}...")
+            
+            # Step 2: Get team's matches using correct endpoint
+            # Correct endpoint: /teams/{team_id}/matches
+            # 只获取 2025-2026 赛季的数据 (Season ID: 197 - Push Back)
+            matches_params = {
+                "season[]": "197",  # VEX V5 Robotics Competition 2025-2026: Push Back
+                "per_page": 250  # 每页最多250场比赛
+            }
+            
+            # Only add event filter if event_id is provided and not "ALL"
+            if event_id and event_id.upper() != "ALL":
                 matches_params["event[]"] = event_id
+                print(f"   🎯 Filtering by season 2025-2026 (ID: 197), event: {event_id}")
+            else:
+                print(f"   🎯 Fetching season 2025-2026 matches (Push Back)")
             
             matches_response = await client.get(
-                f"{self.API_URL}/matches",
+                f"{self.API_URL}/teams/{team_id}/matches",
                 params=matches_params,
                 headers=headers
             )
             
+            print(f"   📊 Matches fetch response: {matches_response.status_code}")
+            
             if matches_response.status_code != 200:
-                raise Exception(f"Matches fetch failed: {matches_response.status_code}")
+                print(f"   ❌ Matches fetch failed with status {matches_response.status_code}")
+                print(f"   Response: {matches_response.text[:200]}")
+                raise Exception(f"Matches fetch failed: {matches_response.status_code} - {matches_response.text[:100]}")
             
             matches_data = matches_response.json()
+            total_matches = len(matches_data.get("data", []))
+            
+            print(f"   ✓ Received {total_matches} matches from API")
+            print(f"   🔄 Parsing match data...")
             
             # Parse matches
             for match_entry in matches_data.get("data", []):
@@ -241,7 +306,13 @@ class RoboteventsScraper(BaseScraper):
                 }
                 matches.append(match)
         
-        return matches
+        print(f"   ✓ Parsed {len(matches)} matches successfully")
+        
+        # Return both team info and matches
+        return {
+            "matches": matches,
+            "team_info": team_info
+        }
     
     async def _fetch_mock_data(self, team_number: str, event_id: str) -> List[Dict[str, Any]]:
         """Return mock match data for demonstration"""

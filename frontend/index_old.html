@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RscoutX - VEX V5 Pushback Scout</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🤖 RscoutX</h1>
+            <p>VEX V5 Pushback Competition Scouting & Analysis Platform</p>
+        </div>
+
+        <!-- Navigation -->
+        <div class="nav">
+            <button class="nav-item active" data-page="dashboard">📊 Dashboard</button>
+            <button class="nav-item" data-page="map">🗺️ Map</button>
+            <button class="nav-item" data-page="admin">⚙️ Admin</button>
+            <button class="nav-item" data-page="report">📄 Report</button>
+        </div>
+
+        <!-- Message Container -->
+        <div id="messageContainer"></div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Dashboard Page -->
+            <div id="dashboardPage" class="page active">
+                <div class="card">
+                    <h2 class="card-title">Team Overview</h2>
+                    <div class="form-group">
+                        <label class="form-label">Team Number</label>
+                        <input type="text" id="dashTeamNumber" class="form-input" placeholder="Enter team number">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Event ID</label>
+                        <input type="text" id="dashEventId" class="form-input" placeholder="Enter event ID">
+                    </div>
+                    <button class="btn btn-primary" onclick="syncMatches()">Sync Matches</button>
+                    <button class="btn btn-secondary" onclick="loadTeamStats()">Load Stats</button>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title">Statistics</h2>
+                    <div id="statsContainer" class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value">-</div>
+                            <div class="stat-label">Total Matches</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">-</div>
+                            <div class="stat-label">Win Rate</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">-</div>
+                            <div class="stat-label">Avg Score</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">-</div>
+                            <div class="stat-label">Highest Score</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Map Page -->
+            <div id="mapPage" class="page">
+                <div class="grid-2">
+                    <div class="card">
+                        <h2 class="card-title">Path Configuration</h2>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Rendering Method</label>
+                            <select id="renderMethod" class="form-select">
+                                <option value="polyline">Polyline</option>
+                                <option value="bezier">Bezier Curve</option>
+                                <option value="spline">Spline (Catmull-Rom)</option>
+                                <option value="astar">A* Pathfinding</option>
+                                <option value="heatline">Heatline</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Coordinate System</label>
+                            <select id="coordSystem" class="form-select">
+                                <option value="pixel">Pixel</option>
+                                <option value="field">Field (mm)</option>
+                            </select>
+                        </div>
+
+                        <h3>Add Path Points</h3>
+                        <div class="form-group">
+                            <label class="form-label">X Coordinate</label>
+                            <input type="number" id="pathX" class="form-input" placeholder="X">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Y Coordinate</label>
+                            <input type="number" id="pathY" class="form-input" placeholder="Y">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Robot State (Optional)</label>
+                            <select id="robotState" class="form-select">
+                                <option value="">None</option>
+                                <option value="idle">🔵 Idle (待机)</option>
+                                <option value="moving">🔵 Moving (移动)</option>
+                                <option value="intaking">🟢 Intaking (吸取)</option>
+                                <option value="wingpushing">🟠 Wing Pushing (推翼)</option>
+                                <option value="releasing">🟡 Releasing (释放)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">
+                                <input type="radio" name="inputMode" value="click" checked onchange="toggleInputMode()"> Click on Map
+                            </label>
+                            <label class="form-label" style="margin-left: 15px;">
+                                <input type="radio" name="inputMode" value="manual" onchange="toggleInputMode()"> Manual Input
+                            </label>
+                        </div>
+                        
+                        <div id="manualInputs" style="display: none;">
+                            <button class="btn btn-primary" onclick="addPathPoint()">Add Point</button>
+                        </div>
+                        
+                        <button class="btn btn-danger" onclick="clearPathPoints()">Clear All</button>
+                        
+                        <div class="form-group" style="margin-top: 15px;">
+                            <label class="form-label">
+                                <input type="checkbox" id="showStateLabels" checked> Show State Labels
+                            </label>
+                            <label class="form-label" style="margin-left: 15px;">
+                                <input type="checkbox" id="showArrows"> Show Direction Arrows
+                            </label>
+                        </div>
+                        
+                        <div id="pathPointsList" style="margin-top: 15px;"></div>
+                        
+                        <button class="btn btn-success" onclick="renderPath()" style="margin-top: 15px; width: 100%;">Render Path</button>
+                    </div>
+
+                    <div class="card">
+                        <h2 class="card-title">Map Preview</h2>
+                        <div style="margin-bottom: 10px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 4px;">
+                            <strong>💡 Tip:</strong> Click on the map below to add path points!
+                        </div>
+                        <div id="mapPreview" class="map-container" style="position: relative; cursor: crosshair;">
+                            <canvas id="mapCanvas" style="border: 2px solid #4CAF50; border-radius: 8px; max-width: 100%;"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Page -->
+            <div id="adminPage" class="page">
+                <!-- Robot Management -->
+                <div class="card">
+                    <h2 class="card-title">Robot Management</h2>
+                    
+                    <h3>Create Robot</h3>
+                    <form id="robotForm" onsubmit="event.preventDefault(); createRobot();">
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Team ID</label>
+                                <input type="number" id="robotTeamId" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Robot Base</label>
+                                <select id="robotBase" class="form-select" required>
+                                    <option value="sbot">SBOT</option>
+                                    <option value="ruiguan">Ruiguan</option>
+                                    <option value="cbot">CBOT</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Drivetrain</label>
+                                <input type="text" id="robotDrivetrain" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Tire Count</label>
+                                <input type="number" id="robotTireCount" class="form-input" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                <input type="checkbox" id="robotFoldable"> Foldable
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Notes</label>
+                            <textarea id="robotNotes" class="form-textarea"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Create Robot</button>
+                    </form>
+
+                    <h3 style="margin-top: 30px;">Robots List</h3>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Team ID</th>
+                                <th>Base</th>
+                                <th>Foldable</th>
+                                <th>Drivetrain</th>
+                                <th>Tires</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="robotsTableBody">
+                            <tr><td colspan="7">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Driver Management -->
+                <div class="card">
+                    <h2 class="card-title">Driver Management</h2>
+                    
+                    <h3>Create Driver</h3>
+                    <form id="driverForm" onsubmit="event.preventDefault(); createDriver();">
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Team ID</label>
+                                <input type="number" id="driverTeamId" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Driver Name</label>
+                                <input type="text" id="driverName" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Playstyle</label>
+                                <select id="driverPlaystyle" class="form-select" required>
+                                    <option value="aggressive">Aggressive</option>
+                                    <option value="defensive">Defensive</option>
+                                    <option value="balanced">Balanced</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Speed Preference</label>
+                                <select id="driverSpeed" class="form-select" required>
+                                    <option value="slow">Slow</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="fast">Fast</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Control Agility (1-10)</label>
+                                <input type="number" id="driverAgility" class="form-input" min="1" max="10" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Tire Count (Optional)</label>
+                                <input type="number" id="driverTireCount" class="form-input">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                <input type="checkbox" id="driverLikesClaw"> Likes Claw
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Notes</label>
+                            <textarea id="driverNotes" class="form-textarea"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Create Driver</button>
+                    </form>
+
+                    <h3 style="margin-top: 30px;">Drivers List</h3>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Team ID</th>
+                                <th>Name</th>
+                                <th>Playstyle</th>
+                                <th>Agility</th>
+                                <th>Speed</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="driversTableBody">
+                            <tr><td colspan="7">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Report Page -->
+            <div id="reportPage" class="page">
+                <div class="card">
+                    <h2 class="card-title">Generate Team Report</h2>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Team ID</label>
+                        <input type="number" id="reportTeamId" class="form-input" placeholder="Enter team ID">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Event ID (Optional)</label>
+                        <input type="text" id="reportEventId" class="form-input" placeholder="Leave empty for all events">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Language</label>
+                        <select id="reportLanguage" class="form-select">
+                            <option value="zh">中文 (Chinese)</option>
+                            <option value="en">English</option>
+                        </select>
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="generateReport()">Generate Report</button>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title">Report (Markdown) 
+                        <button class="btn btn-secondary" onclick="copyMarkdown()" style="float: right;">Copy</button>
+                    </h2>
+                    <div id="reportMarkdown" class="markdown-preview">Report will appear here...</div>
+                </div>
+
+                <div class="card">
+                    <h2 class="card-title">Report (JSON) 
+                        <button class="btn btn-secondary" onclick="copyJson()" style="float: right;">Copy</button>
+                    </h2>
+                    <div id="reportJson" class="markdown-preview">JSON data will appear here...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

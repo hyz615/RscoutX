@@ -10,6 +10,32 @@ from app.services.analytics import sync_team_matches, calculate_team_stats
 router = APIRouter(prefix="/matches", tags=["matches"])
 
 
+@router.get("/sync", response_model=Dict[str, Any])
+async def sync_matches(
+    team: str = Query(..., description="Team number"),
+    event: str = Query(..., description="Event ID"),
+    scraper: str = Query("robotevents", description="Scraper type"),
+    session: Session = Depends(get_session)
+):
+    """Sync team matches from external source"""
+    try:
+        result = await sync_team_matches(session, team, event, scraper)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/stats/{team_id}", response_model=Dict[str, Any])
+def get_team_stats(
+    team_id: int,
+    event_id: str = Query(None),
+    session: Session = Depends(get_session)
+):
+    """Get statistics for a team"""
+    stats = calculate_team_stats(session, team_id, event_id)
+    return stats
+
+
 @router.get("/", response_model=List[MatchRead])
 def get_matches(
     team_id: int = Query(None),
@@ -35,29 +61,3 @@ def get_match(match_id: int, session: Session = Depends(get_session)):
     if not match:
         raise HTTPException(status_code=404, detail="Match not found")
     return match
-
-
-@router.get("/sync", response_model=Dict[str, Any])
-async def sync_matches(
-    team: str = Query(..., description="Team number"),
-    event: str = Query(..., description="Event ID"),
-    scraper: str = Query("robotevents", description="Scraper type"),
-    session: Session = Depends(get_session)
-):
-    """Sync team matches from external source"""
-    try:
-        result = await sync_team_matches(session, team, event, scraper)
-        return result
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/stats/{team_id}", response_model=Dict[str, Any])
-def get_team_stats(
-    team_id: int,
-    event_id: str = Query(None),
-    session: Session = Depends(get_session)
-):
-    """Get statistics for a team"""
-    stats = calculate_team_stats(session, team_id, event_id)
-    return stats

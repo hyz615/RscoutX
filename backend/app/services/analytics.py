@@ -26,7 +26,28 @@ async def sync_team_matches(session: Session, team_number: str, event_id: str,
     
     # Fetch matches from scraper
     scraper = get_scraper(scraper_type)
-    matches_data = await scraper.fetch_team_matches(team_number, event_id)
+    scraper_result = await scraper.fetch_team_matches(team_number, event_id)
+    
+    # Extract matches and team info
+    matches_data = scraper_result.get("matches", [])
+    team_info = scraper_result.get("team_info")
+    
+    # Update team information if we got it from the API
+    if team_info:
+        team.team_name = team_info.get("team_name", team.team_name)
+        team.organization = team_info.get("organization", team.organization)
+        team.region = team_info.get("region", team.region)
+        team.updated_at = datetime.utcnow()
+        session.add(team)
+        session.commit()
+        session.refresh(team)
+        print(f"✓ Updated team info: {team.team_name} - {team.organization}, {team.region}")
+    
+    # Check if we're using mock data
+    is_mock = len(matches_data) > 0 and all(
+        m.get('event_id', '').startswith('DEMO') or m.get('event_name', '').startswith('Mock')
+        for m in matches_data
+    )
     
     # Store in database
     new_count = 0
@@ -79,7 +100,8 @@ async def sync_team_matches(session: Session, team_number: str, event_id: str,
         "event_id": event_id,
         "new_matches": new_count,
         "updated_matches": updated_count,
-        "total_matches": len(matches_data)
+        "total_matches": len(matches_data),
+        "mock_data": is_mock
     }
 
 
@@ -99,6 +121,12 @@ def calculate_team_stats(session: Session, team_id: int, event_id: Optional[str]
             "losses": 0,
             "ties": 0,
             "win_rate": 0.0,
+            # Frontend expects these field names:
+            "avg_score_for": 0.0,
+            "avg_score_against": 0.0,
+            "max_score_for": 0,
+            "min_score_for": 0,
+            # Also keep legacy names for compatibility:
             "avg_score": 0.0,
             "avg_conceded": 0.0,
             "total_points": 0,
@@ -121,6 +149,12 @@ def calculate_team_stats(session: Session, team_id: int, event_id: Optional[str]
         "losses": losses,
         "ties": ties,
         "win_rate": wins / len(matches) if matches else 0.0,
+        # Frontend expects these field names:
+        "avg_score_for": total_score / len(matches) if matches else 0.0,
+        "avg_score_against": total_conceded / len(matches) if matches else 0.0,
+        "max_score_for": max(scores) if scores else 0,
+        "min_score_for": min(scores) if scores else 0,
+        # Also keep legacy names for compatibility:
         "avg_score": total_score / len(matches) if matches else 0.0,
         "avg_conceded": total_conceded / len(matches) if matches else 0.0,
         "total_points": total_score,
