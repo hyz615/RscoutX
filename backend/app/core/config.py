@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     SCRAPER_CACHE_MINUTES: int = 30
     SCRAPER_TIMEOUT_SECONDS: int = 30
     SCRAPER_MAX_RETRIES: int = 3
+    SCRAPER_CACHE_TTL_MINUTES: int = 30
+    ROBOTEVENTS_API_KEY: Optional[str] = None  # Add your RobotEvents API key here
     
     # Path Rendering
     MAP_IMAGE_PATH: str = "../pushback_map.png"

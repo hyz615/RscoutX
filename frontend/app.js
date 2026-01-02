@@ -152,44 +152,265 @@ async function loadTeamStats() {
 }
 
 // Map Page
+let pathPoints = [];
+let mapCanvas, mapCtx;
+let baseMapImage = null;
+let currentInputMode = 'click';
+
 async function loadMapPage() {
     console.log('Loading map page...');
+    
+    // Initialize canvas
+    mapCanvas = document.getElementById('mapCanvas');
+    mapCtx = mapCanvas.getContext('2d');
+    
+    // Load base map image
+    await loadBaseMap();
+    
+    // Add click listener
+    mapCanvas.addEventListener('click', handleMapClick);
+    
+    // Initialize input mode
+    toggleInputMode();
 }
 
-let pathPoints = [];
+async function loadBaseMap() {
+    try {
+        // Try to load the pushback map
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        
+        img.onload = function() {
+            // Set canvas size to match image
+            mapCanvas.width = img.width;
+            mapCanvas.height = img.height;
+            baseMapImage = img;
+            
+            // Draw initial map
+            redrawMap();
+            
+            showMessage('Map loaded! Click to add path points.', 'success');
+        };
+        
+        img.onerror = function() {
+            // Create a blank map if image not found
+            mapCanvas.width = 600;
+            mapCanvas.height = 600;
+            
+            mapCtx.fillStyle = '#1a1a1a';
+            mapCtx.fillRect(0, 0, mapCanvas.width, mapCanvas.height);
+            
+            // Draw grid
+            mapCtx.strokeStyle = '#333';
+            mapCtx.lineWidth = 1;
+            for (let i = 0; i <= 600; i += 50) {
+                mapCtx.beginPath();
+                mapCtx.moveTo(i, 0);
+                mapCtx.lineTo(i, 600);
+                mapCtx.stroke();
+                
+                mapCtx.beginPath();
+                mapCtx.moveTo(0, i);
+                mapCtx.lineTo(600, i);
+                mapCtx.stroke();
+            }
+            
+            mapCtx.fillStyle = '#fff';
+            mapCtx.font = '20px Arial';
+            mapCtx.textAlign = 'center';
+            mapCtx.fillText('VEX Pushback Field Map', 300, 300);
+            mapCtx.font = '14px Arial';
+            mapCtx.fillText('Click to add path points', 300, 330);
+            
+            showMessage('Using blank map. Click to add points.', 'info');
+        };
+        
+        // Try to load the map image
+        img.src = '../pushback_map.png';
+        
+    } catch (error) {
+        console.error('Error loading map:', error);
+        showMessage('Error loading map', 'error');
+    }
+}
+
+function toggleInputMode() {
+    const mode = document.querySelector('input[name="inputMode"]:checked').value;
+    currentInputMode = mode;
+    
+    const manualInputs = document.getElementById('manualInputs');
+    const pathX = document.getElementById('pathX');
+    const pathY = document.getElementById('pathY');
+    
+    if (mode === 'manual') {
+        manualInputs.style.display = 'block';
+        pathX.parentElement.style.display = 'block';
+        pathY.parentElement.style.display = 'block';
+        mapCanvas.style.cursor = 'default';
+        showMessage('Manual input mode: Enter coordinates and click Add Point', 'info');
+    } else {
+        manualInputs.style.display = 'none';
+        pathX.parentElement.style.display = 'none';
+        pathY.parentElement.style.display = 'none';
+        mapCanvas.style.cursor = 'crosshair';
+        showMessage('Click mode: Click on the map to add points', 'info');
+    }
+}
+
+function handleMapClick(event) {
+    if (currentInputMode !== 'click') return;
+    
+    const rect = mapCanvas.getBoundingClientRect();
+    const scaleX = mapCanvas.width / rect.width;
+    const scaleY = mapCanvas.height / rect.height;
+    
+    const x = Math.round((event.clientX - rect.left) * scaleX);
+    const y = Math.round((event.clientY - rect.top) * scaleY);
+    
+    const robotState = document.getElementById('robotState').value;
+    
+    const point = { x, y };
+    if (robotState) {
+        point.robot_state = { state: robotState };
+    }
+    
+    pathPoints.push(point);
+    updatePathPointsList();
+    redrawMap();
+    
+    showMessage(`Point ${pathPoints.length} added at (${x}, ${y})`, 'success');
+}
+
+function redrawMap() {
+    if (!mapCanvas) return;
+    
+    // Clear canvas
+    mapCtx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
+    
+    // Draw base map
+    if (baseMapImage) {
+        mapCtx.drawImage(baseMapImage, 0, 0);
+    } else {
+        mapCtx.fillStyle = '#1a1a1a';
+        mapCtx.fillRect(0, 0, mapCanvas.width, mapCanvas.height);
+    }
+    
+    // Draw path points and connections
+    if (pathPoints.length > 0) {
+        // Draw connections
+        if (pathPoints.length > 1) {
+            mapCtx.strokeStyle = '#FF0000';
+            mapCtx.lineWidth = 2;
+            mapCtx.setLineDash([5, 5]);
+            mapCtx.beginPath();
+            mapCtx.moveTo(pathPoints[0].x, pathPoints[0].y);
+            for (let i = 1; i < pathPoints.length; i++) {
+                mapCtx.lineTo(pathPoints[i].x, pathPoints[i].y);
+            }
+            mapCtx.stroke();
+            mapCtx.setLineDash([]);
+        }
+        
+        // Draw points
+        const stateColors = {
+            'idle': '#808080',
+            'moving': '#1E90FF',
+            'intaking': '#00FF00',
+            'wingpushing': '#FF4500',
+            'releasing': '#FFD700'
+        };
+        
+        pathPoints.forEach((point, index) => {
+            const color = point.robot_state ? 
+                (stateColors[point.robot_state.state] || '#FFFFFF') : 
+                '#FFFFFF';
+            
+            // Draw point circle
+            mapCtx.fillStyle = color;
+            mapCtx.strokeStyle = '#FFFFFF';
+            mapCtx.lineWidth = 2;
+            mapCtx.beginPath();
+            mapCtx.arc(point.x, point.y, 8, 0, Math.PI * 2);
+            mapCtx.fill();
+            mapCtx.stroke();
+            
+            // Draw point number
+            mapCtx.fillStyle = '#FFFFFF';
+            mapCtx.font = 'bold 12px Arial';
+            mapCtx.textAlign = 'center';
+            mapCtx.textBaseline = 'middle';
+            mapCtx.fillText(index + 1, point.x, point.y);
+            
+            // Draw state label
+            if (point.robot_state) {
+                mapCtx.fillStyle = '#000000';
+                mapCtx.fillRect(point.x - 30, point.y - 25, 60, 15);
+                mapCtx.fillStyle = color;
+                mapCtx.font = '10px Arial';
+                mapCtx.fillText(point.robot_state.state, point.x, point.y - 18);
+            }
+        });
+    }
+}
 
 function addPathPoint() {
     const x = parseFloat(document.getElementById('pathX').value);
     const y = parseFloat(document.getElementById('pathY').value);
+    const robotState = document.getElementById('robotState').value;
     
     if (isNaN(x) || isNaN(y)) {
         showMessage('Please enter valid coordinates', 'error');
         return;
     }
     
-    pathPoints.push({ x, y });
+    const point = { x, y };
+    
+    // Add robot state if selected
+    if (robotState) {
+        point.robot_state = { state: robotState };
+    }
+    
+    pathPoints.push(point);
     updatePathPointsList();
+    redrawMap();  // Redraw to show new point
     
     // Clear inputs
     document.getElementById('pathX').value = '';
     document.getElementById('pathY').value = '';
+    document.getElementById('robotState').value = '';
 }
 
 function updatePathPointsList() {
+    const stateEmojis = {
+        'idle': '⭕',
+        'moving': '🔵',
+        'intaking': '🟢',
+        'wingpushing': '🟠',
+        'releasing': '🟡'
+    };
+    
     const list = document.getElementById('pathPointsList');
-    list.innerHTML = pathPoints.map((p, i) => 
-        `<div>Point ${i + 1}: (${p.x}, ${p.y}) <button class="btn btn-danger" onclick="removePathPoint(${i})">Remove</button></div>`
-    ).join('');
+    list.innerHTML = pathPoints.map((p, i) => {
+        const stateText = p.robot_state ? 
+            ` ${stateEmojis[p.robot_state.state] || '●'} ${p.robot_state.state}` : 
+            '';
+        return `<div style="margin: 5px 0; padding: 5px; background: rgba(255,255,255,0.1); border-radius: 4px;">
+            Point ${i + 1}: (${p.x}, ${p.y})${stateText} 
+            <button class="btn btn-danger" onclick="removePathPoint(${i})" style="float: right; padding: 2px 8px;">×</button>
+        </div>`;
+    }).join('');
 }
 
 function removePathPoint(index) {
     pathPoints.splice(index, 1);
     updatePathPointsList();
+    redrawMap();  // Redraw to update visualization
 }
 
 function clearPathPoints() {
     pathPoints = [];
     updatePathPointsList();
+    redrawMap();  // Clear the map visualization
 }
 
 async function renderPath() {
@@ -200,9 +421,11 @@ async function renderPath() {
     
     const method = document.getElementById('renderMethod').value;
     const coordSystem = document.getElementById('coordSystem').value;
+    const showStateLabels = document.getElementById('showStateLabels').checked;
+    const showArrows = document.getElementById('showArrows').checked;
     
     try {
-        showMessage('Rendering path...', 'info');
+        showMessage('Rendering final path with robot states...', 'info');
         
         const response = await fetch(`${API_BASE_URL}/path/render/image`, {
             method: 'POST',
@@ -215,7 +438,9 @@ async function renderPath() {
                     color: '#FF0000',
                     width: 3,
                     opacity: 0.8,
-                    arrow: true
+                    arrow: showArrows,
+                    show_state_labels: showStateLabels,
+                    state_icon_size: 20
                 },
                 return_image: true
             })
@@ -226,10 +451,19 @@ async function renderPath() {
         const blob = await response.blob();
         const imageUrl = URL.createObjectURL(blob);
         
+        // Show rendered image in a popup or replace canvas
         const container = document.getElementById('mapPreview');
-        container.innerHTML = `<img src="${imageUrl}" class="map-image" alt="Rendered path">`;
+        container.innerHTML = `
+            <div style="text-align: center;">
+                <img src="${imageUrl}" style="max-width: 100%; border: 2px solid #4CAF50; border-radius: 8px;" alt="Rendered path">
+                <div style="margin-top: 10px;">
+                    <button class="btn btn-primary" onclick="loadMapPage()">Edit Path</button>
+                    <a href="${imageUrl}" download="robot_path.png" class="btn btn-success">Download</a>
+                </div>
+            </div>
+        `;
         
-        showMessage('Path rendered successfully', 'success');
+        showMessage('Path rendered successfully! Click "Edit Path" to continue editing.', 'success');
     } catch (error) {
         showMessage(`Error: ${error.message}`, 'error');
     }

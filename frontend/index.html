@@ -100,9 +100,41 @@
                             <label class="form-label">Y Coordinate</label>
                             <input type="number" id="pathY" class="form-input" placeholder="Y">
                         </div>
+                        <div class="form-group">
+                            <label class="form-label">Robot State (Optional)</label>
+                            <select id="robotState" class="form-select">
+                                <option value="">None</option>
+                                <option value="idle">🔵 Idle (待机)</option>
+                                <option value="moving">🔵 Moving (移动)</option>
+                                <option value="intaking">🟢 Intaking (吸取)</option>
+                                <option value="wingpushing">🟠 Wing Pushing (推翼)</option>
+                                <option value="releasing">🟡 Releasing (释放)</option>
+                            </select>
+                        </div>
                         
-                        <button class="btn btn-primary" onclick="addPathPoint()">Add Point</button>
+                        <div class="form-group">
+                            <label class="form-label">
+                                <input type="radio" name="inputMode" value="click" checked onchange="toggleInputMode()"> Click on Map
+                            </label>
+                            <label class="form-label" style="margin-left: 15px;">
+                                <input type="radio" name="inputMode" value="manual" onchange="toggleInputMode()"> Manual Input
+                            </label>
+                        </div>
+                        
+                        <div id="manualInputs" style="display: none;">
+                            <button class="btn btn-primary" onclick="addPathPoint()">Add Point</button>
+                        </div>
+                        
                         <button class="btn btn-danger" onclick="clearPathPoints()">Clear All</button>
+                        
+                        <div class="form-group" style="margin-top: 15px;">
+                            <label class="form-label">
+                                <input type="checkbox" id="showStateLabels" checked> Show State Labels
+                            </label>
+                            <label class="form-label" style="margin-left: 15px;">
+                                <input type="checkbox" id="showArrows"> Show Direction Arrows
+                            </label>
+                        </div>
                         
                         <div id="pathPointsList" style="margin-top: 15px;"></div>
                         
@@ -111,8 +143,11 @@
 
                     <div class="card">
                         <h2 class="card-title">Map Preview</h2>
-                        <div id="mapPreview" class="map-container">
-                            <p>Add points and click "Render Path" to see the result</p>
+                        <div style="margin-bottom: 10px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 4px;">
+                            <strong>💡 Tip:</strong> Click on the map below to add path points!
+                        </div>
+                        <div id="mapPreview" class="map-container" style="position: relative; cursor: crosshair;">
+                            <canvas id="mapCanvas" style="border: 2px solid #4CAF50; border-radius: 8px; max-width: 100%;"></canvas>
                         </div>
                     </div>
                 </div>

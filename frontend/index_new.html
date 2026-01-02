@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RscoutX - VEX Pushback 智能侦察系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5568d3;
+            --secondary: #764ba2;
+            --success: #48bb78;
+            --danger: #f56565;
+            --warning: #ed8936;
+            --info: #4299e1;
+            --bg-dark: #1a1a1a;
+            --bg-light: #f7fafc;
+            --border: #e2e8f0;
+            --text-dark: #2d3748;
+            --text-light: #718096;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        /* Main Content */
+        .main-content {
+            padding: 30px;
+        }
+        
+        /* Section */
+        .section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            border: 1px solid var(--border);
+        }
+        
+        .section-title {
+            font-size: 1.5em;
+            color: var(--primary);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* Search Bar */
+        .search-container {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+        }
+        
+        .form-group {
+            flex: 1;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #e53e3e;
+        }
+        
+        /* Team Info Card */
+        .team-info-card {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .info-item {
+            background: var(--bg-light);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .info-label {
+            color: var(--text-light);
+            font-size: 0.9em;
+            margin-bottom: 8px;
+        }
+        
+        .info-value {
+            color: var(--text-dark);
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+        
+        .info-value.highlight {
+            color: var(--primary);
+        }
+        
+        /* Auton Editor */
+        .auton-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .auton-nav {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .auton-counter {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: var(--primary);
+            padding: 8px 16px;
+            background: var(--bg-light);
+            border-radius: 8px;
+        }
+        
+        .canvas-container {
+            position: relative;
+            border: 3px solid var(--primary);
+            border-radius: 12px;
+            overflow: hidden;
+            background: var(--bg-dark);
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        
+        #mapCanvas {
+            display: block;
+            cursor: crosshair;
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .canvas-overlay {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.9em;
+        }
+        
+        /* State Selector */
+        .state-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .state-btn {
+            padding: 12px;
+            border: 2px solid var(--border);
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .state-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .state-btn.active {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: white;
+        }
+        
+        .state-btn.state-idle { border-color: #808080; }
+        .state-btn.state-idle.active { background: #808080; border-color: #808080; }
+        
+        .state-btn.state-moving { border-color: #1E90FF; }
+        .state-btn.state-moving.active { background: #1E90FF; border-color: #1E90FF; }
+        
+        .state-btn.state-intaking { border-color: #00FF00; }
+        .state-btn.state-intaking.active { background: #00FF00; border-color: #00FF00; color: #000; }
+        
+        .state-btn.state-wingpushing { border-color: #FF4500; }
+        .state-btn.state-wingpushing.active { background: #FF4500; border-color: #FF4500; }
+        
+        .state-btn.state-releasing { border-color: #FFD700; }
+        .state-btn.state-releasing.active { background: #FFD700; border-color: #FFD700; color: #000; }
+        
+        /* Points List */
+        .points-list {
+            max-height: 300px;
+            overflow-y: auto;
+            background: var(--bg-light);
+            border-radius: 10px;
+            padding: 15px;
+        }
+        
+        .point-item {
+            background: white;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .point-item .delete-btn {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 5px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        
+        /* Robot Type Selector */
+        .robot-type-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        
+        .robot-type-card {
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .robot-type-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+        
+        .robot-type-card.selected {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        }
+        
+        .robot-type-name {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 1.2em;
+        }
+        
+        /* Driver Notes */
+        .driver-notes {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1em;
+            resize: vertical;
+        }
+        
+        .driver-notes:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        /* AI Export */
+        .ai-export-section {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid var(--primary);
+        }
+        
+        .ai-preview {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .ai-preview h4 {
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+        
+        .ai-preview pre {
+            background: var(--bg-dark);
+            color: #0f0;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 0.9em;
+        }
+        
+        /* Message Toast */
+        .message-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            z-index: 10000;
+            animation: slideIn 0.3s ease-out;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .message-toast.success { background: var(--success); }
+        .message-toast.error { background: var(--danger); }
+        .message-toast.info { background: var(--info); }
+        .message-toast.warning { background: var(--warning); }
+        
+        /* Loading Spinner */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .search-container {
+                flex-direction: column;
+            }
+            
+            .auton-controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🤖 RscoutX</h1>
+            <p>VEX Pushback 智能侦察与分析系统</p>
+        </div>
+
+        <div class="main-content">
+            <!-- 1. Team Search -->
+            <div class="section">
+                <div class="section-title">
+                    🔍 队伍搜索
+                </div>
+                <div class="search-container">
+                    <div class="form-group" style="flex: 2;">
+                        <label>队伍编号 Team Number</label>
+                        <input type="text" id="teamNumber" placeholder="例如: 1234A, 5678B, 9999C" onkeypress="if(event.key==='Enter') searchTeam()">
+                    </div>
+                    <button class="btn btn-primary" onclick="searchTeam()">
+                        <span>🔎 搜索历史数据</span>
+                    </button>
+                </div>
+                <div style="margin-top: 10px; color: var(--text-light); font-size: 0.9em;">
+                    � 将自动加载该队伍在所有赛事中的历史数据和统计信息
+                </div>
+            </div>
+
+            <!-- 2. Team Info & Scores -->
+            <div class="section" id="teamInfoSection" style="display: none;">
+                <div class="section-title">
+                    📊 队伍历史信息与数据统计
+                </div>
+                <div class="team-info-card">
+                    <div class="info-item">
+                        <div class="info-label">队伍编号</div>
+                        <div class="info-value highlight" id="displayTeamNumber">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">队伍名称</div>
+                        <div class="info-value" id="displayTeamName">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">所属组织</div>
+                        <div class="info-value" id="displayOrganization">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">地区</div>
+                        <div class="info-value" id="displayRegion">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">参赛次数</div>
+                        <div class="info-value highlight" id="eventCount">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">总比赛数</div>
+                        <div class="info-value" id="totalMatches">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">历史胜率</div>
+                        <div class="info-value highlight" id="winRate">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">平均得分</div>
+                        <div class="info-value highlight" id="avgScore">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">最高得分</div>
+                        <div class="info-value" id="maxScore">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Auton 估算分</div>
+                        <div class="info-value highlight" id="autonScore">-</div>
+                    </div>
+                </div>
+                
+                <!-- Recent Matches History -->
+                <div style="margin-top: 30px;">
+                    <h3 style="color: var(--primary); margin-bottom: 15px;">📅 近期比赛记录</h3>
+                    <div id="matchHistory" style="max-height: 400px; overflow-y: auto;"></div>
+                </div>
+            </div>
+
+            <!-- 3. Auton Path Drawing -->
+            <div class="section" id="autonSection" style="display: none;">
+                <div class="section-title">
+                    🗺️ Auton 路径绘制
+                </div>
+                
+                <div class="auton-controls">
+                    <div class="auton-nav">
+                        <button class="btn btn-primary" onclick="prevAuton()">⬅️ 上一个</button>
+                        <div class="auton-counter">
+                            Auton <span id="currentAutonIndex">1</span> / <span id="totalAutons">5</span>
+                        </div>
+                        <button class="btn btn-primary" onclick="nextAuton()">➡️ 下一个</button>
+                    </div>
+                    <button class="btn btn-success" onclick="addAuton()">➕ 新增 Auton</button>
+                    <button class="btn btn-danger" onclick="deleteAuton()">🗑️ 删除当前</button>
+                    <button class="btn btn-primary" onclick="clearCurrentPath()">🧹 清空路径</button>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; font-weight: 600;">选择机器人状态:</label>
+                    <div class="state-selector">
+                        <div class="state-btn state-idle" data-state="idle" onclick="selectState('idle')">
+                            ⭕ Idle
+                        </div>
+                        <div class="state-btn state-moving" data-state="moving" onclick="selectState('moving')">
+                            🔵 Moving
+                        </div>
+                        <div class="state-btn state-intaking" data-state="intaking" onclick="selectState('intaking')">
+                            🟢 Intaking
+                        </div>
+                        <div class="state-btn state-wingpushing active" data-state="wingpushing" onclick="selectState('wingpushing')">
+                            🟠 Wing Push
+                        </div>
+                        <div class="state-btn state-releasing" data-state="releasing" onclick="selectState('releasing')">
+                            🟡 Releasing
+                        </div>
+                    </div>
+                </div>
+
+                <div class="canvas-container">
+                    <canvas id="mapCanvas" width="800" height="800"></canvas>
+                    <div class="canvas-overlay">
+                        💡 点击地图添加路径点 | 按住拖动绘制连续路径
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <h3 style="margin-bottom: 10px;">路径点列表:</h3>
+                    <div class="points-list" id="pointsList"></div>
+                </div>
+            </div>
+
+            <!-- 4. Robot Type -->
+            <div class="section" id="robotSection" style="display: none;">
+                <div class="section-title">
+                    🤖 机器人类型
+                </div>
+                <div class="robot-type-grid">
+                    <div class="robot-type-card" data-type="sbot" onclick="selectRobotType('sbot')">
+                        <div class="robot-type-name">S-Bot</div>
+                    </div>
+                    <div class="robot-type-card" data-type="cbot" onclick="selectRobotType('cbot')">
+                        <div class="robot-type-name">C-Bot</div>
+                    </div>
+                    <div class="robot-type-card" data-type="ruiguan" onclick="selectRobotType('ruiguan')">
+                        <div class="robot-type-name">瑞冠型</div>
+                        <div style="font-size: 0.85em; color: var(--warning); margin-top: 8px; font-weight: bold;">⚠️ 路边机器人</div>
+                    </div>
+                    <div class="robot-type-card" data-type="custom" onclick="selectRobotType('custom')">
+                        <div class="robot-type-name">自定义</div>
+                    </div>
+                </div>
+                
+                <!-- Wing Configuration -->
+                <div style="margin-top: 25px; padding: 20px; background: var(--bg-light); border-radius: 12px;">
+                    <h3 style="color: var(--text-dark); margin-bottom: 15px;">机翼配置 Wing Configuration</h3>
+                    <div style="display: flex; gap: 20px; align-items: center;">
+                        <label style="display: flex; align-items: center; cursor: pointer; font-size: 1.1em;">
+                            <input type="checkbox" id="hasWing" style="width: 20px; height: 20px; margin-right: 10px; cursor: pointer;">
+                            <span>机器人配备机翼 (Has Wing)</span>
+                        </label>
+                        <div id="wingInfo" style="display: none; color: var(--success); font-weight: 600;">
+                            ✓ 已启用机翼推球功能
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Driver Habits -->
+            <div class="section" id="driverSection" style="display: none;">
+                <div class="section-title">
+                    👤 驾驶员习惯
+                </div>
+                <textarea class="driver-notes" id="driverNotes" placeholder="在这里记录驾驶员的操作习惯、偏好策略、特殊技巧等...
+
+例如:
+- 喜欢使用机械臂抓取
+- 防守型打法，注重稳定性
+- 快速移动，激进推球
+- 擅长精准定位
+- 偏好左侧场地"></textarea>
+            </div>
+
+            <!-- 6. AI Export -->
+            <div class="section ai-export-section">
+                <div class="section-title">
+                    🤖 AI 智能分析导出
+                </div>
+                <div style="margin-bottom: 15px; color: var(--text-dark);">
+                    <p>📋 将所有绘制的 Auton 路径图片、队伍数据、机器人类型和驾驶员习惯打包发送给 GPT-5 多模态模型进行智能分析。</p>
+                </div>
+                
+                <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="previewAIData()">
+                        <span>👁️ 预览数据</span>
+                    </button>
+                    <button class="btn btn-success" onclick="exportToAI()">
+                        <span>🚀 发送到 AI 分析</span>
+                    </button>
+                    <button class="btn btn-primary" onclick="downloadAllAutons()">
+                        <span>💾 下载所有 Auton 图片</span>
+                    </button>
+                    <button class="btn btn-danger" onclick="confirmClearSavedData()" title="清除所有自动保存的数据">
+                        <span>🗑️ 清除保存数据</span>
+                    </button>
+                </div>
+
+                <div class="ai-preview" id="aiPreview" style="display: none;">
+                    <h4>📊 AI 分析预览数据:</h4>
+                    <pre id="aiPreviewContent"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE = 'http://localhost:8000/api';
+        
+        // Global State
+        let currentTeamData = null;
+        let currentTeamId = null;
+        let autons = [
+            { id: 1, name: 'Auton 1', points: [] }
+        ];
+        let currentAutonIndex = 0;
+        let currentState = 'wingpushing';
+        let selectedRobotType = null;
+        let hasWing = false;
+        let isDrawing = false;
+        
+        // Auto-save settings
+        const AUTOSAVE_KEY = 'rscoutx_autosave_data';
+        let autoSaveTimer = null;
+        
+        // Canvas
+        const canvas = document.getElementById('mapCanvas');
+        const ctx = canvas.getContext('2d');
+        let baseMapImage = null;
+        
+        // State Colors
+        const stateColors = {
+            'idle': '#808080',
+            'moving': '#1E90FF',
+            'intaking': '#00FF00',
+            'wingpushing': '#FF4500',
+            'releasing': '#FFD700'
+        };
+        
+        // Initialize
+        async function init() {
+            loadAutoSaveData(); // Load saved data first
+            await loadBaseMap();
+            setupCanvasEvents();
+            updateAutonCounter();
+        }
+        
+        // Auto-save functions
+        function saveData() {
+            const dataToSave = {
+                autons: autons,
+                currentAutonIndex: currentAutonIndex,
+                selectedRobotType: selectedRobotType,
+                hasWing: hasWing,
+                driverNotes: document.getElementById('driverNotes').value,
+                currentTeamData: currentTeamData,
+                currentTeamId: currentTeamId,
+                timestamp: new Date().toISOString()
+            };
+            
+            try {
+                localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(dataToSave));
+                console.log('✓ Data auto-saved at', new Date().toLocaleTimeString());
+            } catch (e) {
+                console.error('Failed to save data:', e);
+            }
+        }
+        
+        function loadAutoSaveData() {
+            try {
+                const saved = localStorage.getItem(AUTOSAVE_KEY);
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    
+                    // Restore data
+                    if (data.autons && data.autons.length > 0) {
+                        autons = data.autons;
+                    }
+                    if (data.currentAutonIndex !== undefined) {
+                        currentAutonIndex = data.currentAutonIndex;
+                    }
+                    if (data.selectedRobotType) {
+                        selectedRobotType = data.selectedRobotType;
+                        // Highlight selected robot type
+                        setTimeout(() => {
+                            const card = document.querySelector(`[data-type="${selectedRobotType}"]`);
+                            if (card) card.classList.add('selected');
+                        }, 100);
+                    }
+                    if (data.hasWing !== undefined) {
+                        hasWing = data.hasWing;
+                        setTimeout(() => {
+                            document.getElementById('hasWing').checked = hasWing;
+                            document.getElementById('wingInfo').style.display = hasWing ? 'block' : 'none';
+                        }, 100);
+                    }
+                    if (data.driverNotes) {
+                        setTimeout(() => {
+                            document.getElementById('driverNotes').value = data.driverNotes;
+                        }, 100);
+                    }
+                    if (data.currentTeamData) {
+                        currentTeamData = data.currentTeamData;
+                    }
+                    if (data.currentTeamId) {
+                        currentTeamId = data.currentTeamId;
+                    }
+                    
+                    console.log('✓ Loaded auto-saved data from', new Date(data.timestamp).toLocaleString());
+                    showMessage('已恢复上次保存的数据', 'info');
+                }
+            } catch (e) {
+                console.error('Failed to load saved data:', e);
+            }
+        }
+        
+        function triggerAutoSave() {
+            // Debounce: wait 1 second after last change before saving
+            if (autoSaveTimer) {
+                clearTimeout(autoSaveTimer);
+            }
+            autoSaveTimer = setTimeout(() => {
+                saveData();
+            }, 1000);
+        }
+        
+        function clearSavedData() {
+            try {
+                localStorage.removeItem(AUTOSAVE_KEY);
+                console.log('✓ Saved data cleared');
+                showMessage('已清除保存的数据', 'info');
+            } catch (e) {
+                console.error('Failed to clear saved data:', e);
+            }
+        }
+        
+        function confirmClearSavedData() {
+            if (confirm('⚠️ 确定要清除所有自动保存的数据吗？\n\n这将删除:\n• 所有 Auton 路径\n• 机器人配置\n• 驾驶员习惯笔记\n• 当前队伍数据\n\n此操作无法撤销!')) {
+                clearSavedData();
+                // Reset to initial state
+                setTimeout(() => {
+                    location.reload();
+                }, 500);
+            }
+        }
+        
+        async function loadBaseMap() {
+            // Try multiple possible paths for the map image
+            const possiblePaths = [
+                './pushback_map.png',           // Same directory as HTML
+                '../pushback_map.png',          // Parent directory
+                '/pushback_map.png',            // Root of server
+                'pushback_map.png'              // Current directory
+            ];
+            
+            let loaded = false;
+            
+            for (const path of possiblePaths) {
+                try {
+                    await new Promise((resolve, reject) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            baseMapImage = img;
+                            redrawCanvas();
+                            console.log(`✓ Map loaded from: ${path}`);
+                            loaded = true;
+                            resolve();
+                        };
+                        img.onerror = () => {
+                            console.log(`✗ Failed to load from: ${path}`);
+                            reject();
+                        };
+                        img.src = path;
+                    });
+                    
+                    if (loaded) break;
+                } catch (e) {
+                    // Try next path
+                    continue;
+                }
+            }
+            
+            if (!loaded) {
+                console.warn('Could not load pushback_map.png from any path, using default grid');
+                drawDefaultGrid();
+            }
+        }
+        
+        function drawDefaultGrid() {
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(0, 0, 800, 800);
+            
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 800; i += 50) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, 800);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(800, i);
+                ctx.stroke();
+            }
+            
+            // Draw field outline
+            ctx.strokeStyle = '#ff0000';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(50, 50, 700, 700);
+            
+            // Draw center cross
+            ctx.strokeStyle = '#666';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(400, 50);
+            ctx.lineTo(400, 750);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(50, 400);
+            ctx.lineTo(750, 400);
+            ctx.stroke();
+            
+            // Add text
+            ctx.fillStyle = '#fff';
+            ctx.font = '28px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('VEX Pushback Field', 400, 380);
+            ctx.font = '16px Arial';
+            ctx.fillStyle = '#aaa';
+            ctx.fillText('pushback_map.png 未找到 - 使用默认网格', 400, 410);
+            ctx.font = '14px Arial';
+            ctx.fillText('点击地图添加路径点', 400, 440);
+        }
+        
+        function setupCanvasEvents() {
+            canvas.addEventListener('mousedown', (e) => {
+                isDrawing = true;
+                handleCanvasClick(e);
+            });
+            
+            canvas.addEventListener('mousemove', (e) => {
+                if (isDrawing) {
+                    handleCanvasClick(e);
+                }
+            });
+            
+            canvas.addEventListener('mouseup', () => {
+                isDrawing = false;
+            });
+            
+            canvas.addEventListener('mouseleave', () => {
+                isDrawing = false;
+            });
+        }
+        
+        function handleCanvasClick(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = Math.round((e.clientX - rect.left) * (canvas.width / rect.width));
+            const y = Math.round((e.clientY - rect.top) * (canvas.height / rect.height));
+            
+            const point = {
+                x,
+                y,
+                robot_state: { state: currentState }
+            };
+            
+            autons[currentAutonIndex].points.push(point);
+            redrawCanvas();
+            updatePointsList();
+            triggerAutoSave(); // Auto-save after adding point
+        }
+        
+        function redrawCanvas() {
+            // Clear
+            ctx.clearRect(0, 0, 800, 800);
+            
+            // Draw base map or grid
+            if (baseMapImage) {
+                ctx.drawImage(baseMapImage, 0, 0, 800, 800);
+            } else {
+                drawDefaultGrid();
+            }
+            
+            const points = autons[currentAutonIndex].points;
+            if (points.length === 0) return;
+            
+            // Draw path lines
+            if (points.length > 1) {
+                ctx.strokeStyle = '#FF0000';
+                ctx.lineWidth = 3;
+                ctx.setLineDash([]);
+                ctx.beginPath();
+                ctx.moveTo(points[0].x, points[0].y);
+                for (let i = 1; i < points.length; i++) {
+                    ctx.lineTo(points[i].x, points[i].y);
+                }
+                ctx.stroke();
+            }
+            
+            // Draw points
+            points.forEach((point, index) => {
+                const color = stateColors[point.robot_state.state] || '#FFFFFF';
+                
+                // Draw point circle
+                ctx.fillStyle = color;
+                ctx.strokeStyle = '#FFFFFF';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, 12, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                
+                // Draw number
+                ctx.fillStyle = '#000';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(index + 1, point.x, point.y);
+            });
+        }
+        
+        function updatePointsList() {
+            const list = document.getElementById('pointsList');
+            const points = autons[currentAutonIndex].points;
+            
+            const stateEmojis = {
+                'idle': '⭕',
+                'moving': '🔵',
+                'intaking': '🟢',
+                'wingpushing': '🟠',
+                'releasing': '🟡'
+            };
+            
+            list.innerHTML = points.map((p, i) => {
+                const emoji = stateEmojis[p.robot_state.state];
+                return `
+                    <div class="point-item">
+                        <span><strong>#${i+1}</strong> (${p.x}, ${p.y}) ${emoji} ${p.robot_state.state}</span>
+                        <button class="delete-btn" onclick="removePoint(${i})">×</button>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function removePoint(index) {
+            autons[currentAutonIndex].points.splice(index, 1);
+            redrawCanvas();
+            updatePointsList();
+            triggerAutoSave(); // Auto-save
+            showMessage('路径点已删除', 'info');
+        }
+        
+        function selectState(state) {
+            currentState = state;
+            document.querySelectorAll('.state-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-state="${state}"]`).classList.add('active');
+            triggerAutoSave(); // Auto-save
+        }
+        
+        function selectRobotType(type) {
+            selectedRobotType = type;
+            document.querySelectorAll('.robot-type-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.querySelector(`[data-type="${type}"]`).classList.add('selected');
+            triggerAutoSave(); // Auto-save
+            showMessage(`已选择机器人类型: ${type}`, 'success');
+        }
+        
+        // Auton Navigation
+        function updateAutonCounter() {
+            document.getElementById('currentAutonIndex').textContent = currentAutonIndex + 1;
+            document.getElementById('totalAutons').textContent = autons.length;
+        }
+        
+        function prevAuton() {
+            if (currentAutonIndex > 0) {
+                currentAutonIndex--;
+                redrawCanvas();
+                updatePointsList();
+                updateAutonCounter();
+                triggerAutoSave(); // Auto-save
+            }
+        }
+        
+        function nextAuton() {
+            if (currentAutonIndex < autons.length - 1) {
+                currentAutonIndex++;
+                redrawCanvas();
+                updatePointsList();
+                updateAutonCounter();
+                triggerAutoSave(); // Auto-save
+            }
+        }
+        
+        function addAuton() {
+            autons.push({
+                id: autons.length + 1,
+                name: `Auton ${autons.length + 1}`,
+                points: []
+            });
+            currentAutonIndex = autons.length - 1;
+            redrawCanvas();
+            updatePointsList();
+            updateAutonCounter();
+            triggerAutoSave(); // Auto-save
+            showMessage('新增 Auton 成功', 'success');
+        }
+        
+        function deleteAuton() {
+            if (autons.length === 1) {
+                showMessage('至少保留一个 Auton', 'warning');
+                return;
+            }
+            
+            autons.splice(currentAutonIndex, 1);
+            if (currentAutonIndex >= autons.length) {
+                currentAutonIndex = autons.length - 1;
+            }
+            redrawCanvas();
+            updatePointsList();
+            updateAutonCounter();
+            triggerAutoSave(); // Auto-save
+            showMessage('Auton 已删除', 'info');
+        }
+        
+        function clearCurrentPath() {
+            autons[currentAutonIndex].points = [];
+            redrawCanvas();
+            updatePointsList();
+            triggerAutoSave(); // Auto-save
+            showMessage('路径已清空', 'info');
+        }
+        
+        // Team Search
+        async function searchTeam() {
+            const teamNumber = document.getElementById('teamNumber').value.trim();
+            
+            if (!teamNumber) {
+                showMessage('请输入队伍编号', 'error');
+                return;
+            }
+            
+            try {
+                showMessage('正在加载队伍历史数据...', 'info');
+                
+                // Get team
+                const teamsResult = await fetch(`${API_BASE}/teams/`);
+                const teams = await teamsResult.json();
+                const team = teams.find(t => t.team_number === teamNumber);
+                
+                if (!team) {
+                    showMessage('未找到队伍信息，正在创建...', 'info');
+                    // Create team if not exists
+                    const createResult = await fetch(`${API_BASE}/teams/`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            team_number: teamNumber,
+                            team_name: `Team ${teamNumber}`,
+                            organization: '未知',
+                            region: '未知'
+                        })
+                    });
+                    const newTeam = await createResult.json();
+                    currentTeamId = newTeam.id;
+                    
+                    // Display basic info
+                    displayTeamInfo(newTeam, { total_matches: 0, win_rate: 0, avg_score_for: 0, max_score_for: 0 }, []);
+                    showMessage('队伍已创建，暂无历史数据', 'info');
+                    return;
+                }
+                
+                currentTeamId = team.id;
+                
+                // Get all stats (no event_id filter = all history)
+                const statsResult = await fetch(`${API_BASE}/matches/stats/${team.id}`);
+                const stats = await statsResult.json();
+                
+                // Get all matches for this team
+                const matchesResult = await fetch(`${API_BASE}/matches/`);
+                const allMatches = await matchesResult.json();
+                const teamMatches = allMatches.filter(m => m.team_id === team.id);
+                
+                // Display data
+                displayTeamInfo(team, stats, teamMatches);
+                
+                currentTeamData = { team, stats, matches: teamMatches };
+                
+                // Show sections
+                document.getElementById('teamInfoSection').style.display = 'block';
+                document.getElementById('autonSection').style.display = 'block';
+                document.getElementById('robotSection').style.display = 'block';
+                document.getElementById('driverSection').style.display = 'block';
+                
+                triggerAutoSave(); // Auto-save team data
+                
+                showMessage(`数据加载成功! 找到 ${teamMatches.length} 场历史比赛`, 'success');
+            } catch (error) {
+                showMessage('加载失败: ' + error.message, 'error');
+                console.error(error);
+            }
+        }
+        
+        function displayTeamInfo(team, stats, matches) {
+            // Basic info
+            document.getElementById('displayTeamNumber').textContent = team.team_number;
+            document.getElementById('displayTeamName').textContent = team.team_name || 'Unknown';
+            document.getElementById('displayOrganization').textContent = team.organization || '未知';
+            document.getElementById('displayRegion').textContent = team.region || '未知';
+            
+            // Stats
+            document.getElementById('totalMatches').textContent = stats.total_matches || 0;
+            document.getElementById('winRate').textContent = ((stats.win_rate || 0) * 100).toFixed(1) + '%';
+            document.getElementById('avgScore').textContent = (stats.avg_score_for || 0).toFixed(1);
+            document.getElementById('maxScore').textContent = stats.max_score_for || 0;
+            document.getElementById('autonScore').textContent = Math.floor((stats.avg_score_for || 0) * 0.3);
+            
+            // Count unique events
+            const uniqueEvents = [...new Set(matches.map(m => m.event_id))];
+            document.getElementById('eventCount').textContent = uniqueEvents.length;
+            
+            // Display match history
+            displayMatchHistory(matches);
+        }
+        
+        function displayMatchHistory(matches) {
+            const container = document.getElementById('matchHistory');
+            
+            if (matches.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: var(--text-light); padding: 30px;">暂无比赛记录</div>';
+                return;
+            }
+            
+            // Sort by date (newest first)
+            const sortedMatches = [...matches].sort((a, b) => {
+                const dateA = a.match_date ? new Date(a.match_date) : new Date(0);
+                const dateB = b.match_date ? new Date(b.match_date) : new Date(0);
+                return dateB - dateA;
+            });
+            
+            // Take latest 20 matches
+            const recentMatches = sortedMatches.slice(0, 20);
+            
+            container.innerHTML = recentMatches.map(match => {
+                const isWin = match.result === 'win';
+                const resultColor = isWin ? 'var(--success)' : 'var(--danger)';
+                const resultIcon = isWin ? '✅' : '❌';
+                const allianceColor = match.alliance === 'red' ? '#ff4444' : '#4444ff';
+                const date = match.match_date ? new Date(match.match_date).toLocaleDateString('zh-CN') : '未知';
+                
+                return `
+                    <div style="background: white; padding: 15px; margin-bottom: 10px; border-radius: 10px; border-left: 4px solid ${resultColor}; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <span style="font-weight: bold; font-size: 1.1em;">${match.match_id}</span>
+                                <span style="color: var(--text-light); margin-left: 10px;">${date}</span>
+                            </div>
+                            <div style="font-size: 1.5em;">${resultIcon}</div>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <span style="background: ${allianceColor}; color: white; padding: 3px 10px; border-radius: 5px; font-size: 0.9em;">
+                                ${match.alliance === 'red' ? '红方' : '蓝方'}
+                            </span>
+                            <span style="margin-left: 15px; font-weight: bold; font-size: 1.2em;">
+                                ${match.score_for} : ${match.score_against}
+                            </span>
+                            <span style="margin-left: 10px; color: ${resultColor}; font-weight: bold;">
+                                ${isWin ? '胜利' : '失败'}
+                            </span>
+                        </div>
+                        <div style="margin-top: 8px; color: var(--text-light); font-size: 0.9em;">
+                            📍 ${match.event_name || match.event_id}
+                        </div>
+                        ${match.opponents ? `
+                            <div style="margin-top: 5px; color: var(--text-light); font-size: 0.85em;">
+                                🤝 对手: ${match.opponents}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // AI Export
+        function previewAIData() {
+            const driverNotes = document.getElementById('driverNotes').value;
+            
+            const data = {
+                team: currentTeamData,
+                robotType: selectedRobotType,
+                hasWing: hasWing,
+                driverHabits: driverNotes,
+                autons: autons.map(a => ({
+                    name: a.name,
+                    pointCount: a.points.length,
+                    points: a.points
+                }))
+            };
+            
+            document.getElementById('aiPreviewContent').textContent = JSON.stringify(data, null, 2);
+            document.getElementById('aiPreview').style.display = 'block';
+            showMessage('数据预览已生成', 'info');
+        }
+        
+        async function exportToAI() {
+            if (!currentTeamData) {
+                showMessage('请先搜索队伍', 'error');
+                return;
+            }
+            
+            try {
+                showMessage('正在生成 AI 分析报告...', 'info');
+                
+                // Render all autons
+                const autonImages = [];
+                for (let i = 0; i < autons.length; i++) {
+                    const auton = autons[i];
+                    if (auton.points.length < 2) continue;
+                    
+                    const response = await fetch(`${API_BASE}/path/render/image`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            method: 'spline',
+                            points: auton.points,
+                            coordinate_system: 'pixel',
+                            style: {
+                                color: '#FF0000',
+                                width: 3,
+                                opacity: 0.8,
+                                arrow: true,
+                                show_state_labels: true,
+                                state_icon_size: 20
+                            }
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        autonImages.push({
+                            name: auton.name,
+                            blob: blob
+                        });
+                    }
+                }
+                
+                // Create AI report
+                const driverNotes = document.getElementById('driverNotes').value;
+                const reportData = {
+                    team_id: currentTeamId,
+                    event_id: null, // Get all history
+                    include_map: true,
+                    include_driver: true,
+                    include_robot: true,
+                    language: 'zh',
+                    custom_context: `
+机器人类型: ${selectedRobotType || '未选择'}${selectedRobotType === 'ruiguan' ? ' (路边机器人)' : ''}
+是否有机翼: ${hasWing ? '是 ✓' : '否'}
+驾驶员习惯: ${driverNotes || '无'}
+Auton 数量: ${autons.length}
+总路径点数: ${autons.reduce((sum, a) => sum + a.points.length, 0)}
+历史比赛数: ${currentTeamData.matches ? currentTeamData.matches.length : 0}
+参赛次数: ${currentTeamData.matches ? [...new Set(currentTeamData.matches.map(m => m.event_id))].length : 0}
+                    `
+                };
+                
+                let reportMarkdown = '';
+                let aiSuccess = false;
+                
+                // Try to get AI report
+                try {
+                    const reportResponse = await fetch(`${API_BASE}/report/generate`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(reportData)
+                    });
+                    
+                    const reportResult = await reportResponse.json();
+                    
+                    if (reportResult.success && reportResult.report_markdown) {
+                        reportMarkdown = reportResult.report_markdown;
+                        aiSuccess = true;
+                    }
+                } catch (aiError) {
+                    console.warn('AI generation failed, using fallback:', aiError);
+                }
+                
+                // Generate fallback report if AI failed
+                if (!aiSuccess) {
+                    const team = currentTeamData.team;
+                    const matches = currentTeamData.matches || [];
+                    const totalMatches = matches.length;
+                    const events = [...new Set(matches.map(m => m.event_id))].length;
+                    const avgScore = totalMatches > 0 ? (matches.reduce((sum, m) => sum + (m.score || 0), 0) / totalMatches).toFixed(1) : 0;
+                    const maxScore = totalMatches > 0 ? Math.max(...matches.map(m => m.score || 0)) : 0;
+                    
+                    reportMarkdown = `# 🤖 队伍分析报告 - ${team.team_number}
+
+## ⚠️ 提示
+AI 智能分析暂时不可用（可能是 API 配置问题），以下是基于数据的自动生成报告。
+
+## 📊 基本信息
+- **队伍编号**: ${team.team_number}
+- **队伍名称**: ${team.team_name}
+- **组织**: ${team.organization || '未知'}
+- **位置**: ${team.city || '未知'}, ${team.region || '未知'}, ${team.country || '未知'}
+
+## 🏆 比赛统计
+- **参赛次数**: ${events} 场赛事
+- **总比赛数**: ${totalMatches} 场
+- **平均得分**: ${avgScore} 分
+- **最高得分**: ${maxScore} 分
+- **排名**: ${team.ranking || 'N/A'}
+
+## 🤖 机器人配置
+- **类型**: ${selectedRobotType || '未选择'}${selectedRobotType === 'ruiguan' ? ' ⚠️ (路边机器人)' : ''}
+- **机翼**: ${hasWing ? '有 ✓' : '无'}
+
+## 🎯 Auton 路径
+- **总 Auton 数**: ${autons.length}
+- **总路径点数**: ${autons.reduce((sum, a) => sum + a.points.length, 0)}
+
+${autons.map((a, i) => `### Auton ${i + 1}: ${a.name}
+- 路径点: ${a.points.length} 个
+- 机器人状态: ${a.points.map(p => p.state).join(' → ')}`).join('\n\n')}
+
+## 🎮 驾驶员习惯
+${driverNotes || '无备注'}
+
+## 💡 建议
+${totalMatches > 0 ? `
+- 队伍表现${avgScore > 50 ? '优秀' : avgScore > 30 ? '良好' : '需要改进'}
+- 建议多练习 Auton 路径的精确度
+- ${hasWing ? '充分利用机翼优势' : '考虑添加机翼配置'}
+` : '暂无足够数据进行分析'}
+
+---
+*报告生成时间: ${new Date().toLocaleString('zh-CN')}*
+*生成方式: 自动生成（AI 不可用）*
+
+**配置 AI 分析的步骤：**
+1. 确保后端 .env 文件中配置了有效的 OPENAI_API_KEY
+2. 将 OPENAI_MODEL 改为 gpt-4 或 gpt-4-turbo
+3. 重启后端服务`;
+                }
+                
+                // Open report in new window
+                const win = window.open('', '_blank');
+                win.document.write(`
+                    <html>
+                    <head>
+                        <title>${aiSuccess ? 'AI ' : ''}分析报告 - ${currentTeamData.team.team_number}</title>
+                        <style>
+                            body { font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; max-width: 1200px; margin: 0 auto; background: #f5f5f5; line-height: 1.6; }
+                            h1 { color: #667eea; border-bottom: 3px solid #667eea; padding-bottom: 10px; }
+                            h2 { color: #764ba2; margin-top: 30px; }
+                            h3 { color: #457b9d; margin-top: 20px; }
+                            .report { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                            .warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 5px; }
+                            pre { background: #1a1a1a; color: #00ff00; padding: 20px; border-radius: 8px; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; }
+                            .images { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 30px; }
+                            .images img { width: 100%; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+                            .images .img-caption { text-align: center; margin-top: 10px; font-weight: bold; color: #667eea; }
+                            ul, ol { margin-left: 20px; }
+                            code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: 'Consolas', monospace; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="report">
+                            ${aiSuccess ? '' : '<div class="warning">⚠️ AI 智能分析暂时不可用，显示自动生成报告</div>'}
+                            <pre>${reportMarkdown}</pre>
+                            ${autonImages.length > 0 ? '<h2>🎯 Auton 路径可视化</h2>' : ''}
+                            <div class="images" id="autonImages"></div>
+                        </div>
+                    </body>
+                    </html>
+                `);
+                
+                // Add images
+                autonImages.forEach(img => {
+                    const div = win.document.createElement('div');
+                    const imgElement = win.document.createElement('img');
+                    imgElement.src = URL.createObjectURL(img.blob);
+                    imgElement.alt = img.name;
+                    imgElement.title = img.name;
+                    const caption = win.document.createElement('div');
+                    caption.className = 'img-caption';
+                    caption.textContent = img.name;
+                    div.appendChild(imgElement);
+                    div.appendChild(caption);
+                    win.document.getElementById('autonImages').appendChild(div);
+                });
+                
+                showMessage(aiSuccess ? 'AI 分析报告已生成!' : '报告已生成（AI 不可用，显示基础报告）', aiSuccess ? 'success' : 'warning');
+            } catch (error) {
+                console.error('Export error:', error);
+                showMessage('导出失败: ' + error.message, 'error');
+            }
+        }
+        
+        async function downloadAllAutons() {
+            for (let i = 0; i < autons.length; i++) {
+                const auton = autons[i];
+                if (auton.points.length < 2) continue;
+                
+                try {
+                    const response = await fetch(`${API_BASE}/path/render/image`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            method: 'spline',
+                            points: auton.points,
+                            coordinate_system: 'pixel',
+                            style: {
+                                color: '#FF0000',
+                                width: 3,
+                                opacity: 0.8,
+                                arrow: true,
+                                show_state_labels: true,
+                                state_icon_size: 20
+                            }
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `${auton.name}.png`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                    }
+                } catch (error) {
+                    console.error(`Failed to download ${auton.name}:`, error);
+                }
+            }
+            
+            showMessage(`下载完成! 共 ${autons.length} 张图片`, 'success');
+        }
+        
+        // Utility: Show Message
+        function showMessage(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `message-toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s ease-out reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+        
+        // Wing checkbox handler
+        document.getElementById('hasWing').addEventListener('change', function(e) {
+            hasWing = e.target.checked;
+            document.getElementById('wingInfo').style.display = hasWing ? 'block' : 'none';
+            triggerAutoSave(); // Auto-save
+            if (hasWing) {
+                showMessage('机翼功能已启用', 'success');
+            } else {
+                showMessage('机翼功能已禁用', 'info');
+            }
+        });
+        
+        // Driver notes auto-save
+        document.getElementById('driverNotes').addEventListener('input', function() {
+            triggerAutoSave();
+        });
+        
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>

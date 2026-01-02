@@ -1,0 +1,25 @@
+# Minimal dependencies for testing installation
+# Use this if full requirements.txt fails due to Windows Defender
+
+# Core Framework
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+
+# Database
+sqlmodel==0.0.22
+sqlalchemy==2.0.36
+
+# Basic utilities
+python-dotenv==1.0.1
+pydantic==2.10.4
+pydantic-settings==2.7.0
+
+# HTTP
+httpx==0.28.1
+
+# Image processing (essential)
+pillow==11.0.0
+numpy==2.2.1
+
+# Note: Install additional packages later with:
+# pip install opencv-python scipy openai

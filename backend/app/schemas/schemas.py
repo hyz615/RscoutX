@@ -126,11 +126,19 @@ class MatchRead(MatchBase):
 
 
 # Path Rendering Schemas
+class RobotState(BaseModel):
+    """Robot state at a specific point"""
+    state: str  # wingpushing, intaking, releasing, moving, idle
+    color: Optional[str] = None  # Auto-assign if not provided
+    icon: Optional[str] = None  # Custom icon name
+
+
 class PathPoint(BaseModel):
     x: float
     y: float
     t: Optional[float] = None  # time or speed
     speed: Optional[float] = None
+    robot_state: Optional[RobotState] = None  # Robot state at this point
 
 
 class PathStyle(BaseModel):
@@ -139,6 +147,8 @@ class PathStyle(BaseModel):
     opacity: float = 0.8
     gradient: Optional[bool] = False
     arrow: Optional[bool] = False
+    show_state_labels: bool = True  # Show state text labels
+    state_icon_size: int = 20  # Size of state icons
 
 
 class PathRenderRequest(BaseModel):

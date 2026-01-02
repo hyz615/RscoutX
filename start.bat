@@ -38,11 +38,33 @@ IF NOT EXIST "venv\" (
 REM Activate virtual environment
 call venv\Scripts\activate.bat
 
-REM Install/update dependencies
+REM Upgrade pip first
+echo.
+echo ================================
+echo Upgrading pip, setuptools, wheel...
+echo ================================
+python -m pip install --upgrade pip setuptools wheel
+
+REM Install/update dependencies with real-time output
+echo.
+echo ================================
 echo Installing backend dependencies...
-pip install -q -r requirements.txt
+echo This may take a few minutes...
+echo ================================
+echo.
+pip install -r requirements.txt --upgrade
 IF ERRORLEVEL 1 (
-    echo [WARNING] Some dependencies may not have installed correctly
+    echo.
+    echo [ERROR] Failed to install dependencies
+    echo Please check the error messages above
+    echo.
+    echo Common solutions:
+    echo 1. Run as Administrator
+    echo 2. Add Windows Defender exclusion
+    echo 3. Check internet connection
+    echo.
+    pause
+    exit /b 1
 )
 
 REM Check for .env file
