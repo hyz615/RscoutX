@@ -177,6 +177,7 @@ class ReportRequest(BaseModel):
     include_driver: bool = True
     include_robot: bool = True
     language: str = "zh"  # zh or en
+    custom_context: Optional[str] = None  # Custom context from frontend (robot type, driver habits, etc.)
 
 
 class ReportResponse(BaseModel):

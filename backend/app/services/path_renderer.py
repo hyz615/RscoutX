@@ -282,14 +282,20 @@ class PathRenderer:
     
     def render(self, method: str, points: List[PathPoint], style: PathStyle,
                coordinate_system: str = "pixel", obstacles: Optional[List[Any]] = None,
-               return_image: bool = True, return_overlay: bool = False) -> Dict[str, Any]:
-        """Main rendering method"""
+               return_image: bool = True, return_overlay: bool = False,
+               canvas_size: Tuple[int, int] = (800, 800)) -> Dict[str, Any]:
+        """Main rendering method
         
-        # Load map
+        Args:
+            canvas_size: Target canvas size (default 800x800 to match frontend)
+        """
+        
+        # Load map and resize to match frontend canvas
         img = self.load_map()
-        img_size = img.size
+        img = img.resize(canvas_size, Image.Resampling.LANCZOS)
+        img_size = canvas_size
         
-        # Convert coordinates
+        # Convert coordinates - points are already in pixel coordinates relative to canvas_size
         pixel_points = self.convert_coordinates(points, coordinate_system, img_size)
         
         # Render based on method

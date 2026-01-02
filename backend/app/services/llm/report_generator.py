@@ -20,7 +20,8 @@ async def generate_team_report(
     include_map: bool = True,
     include_driver: bool = True,
     include_robot: bool = True,
-    language: str = "zh"
+    language: str = "zh",
+    custom_context: Optional[str] = None
 ) -> Dict[str, Any]:
     """Generate AI-powered team analysis report"""
     
@@ -32,39 +33,47 @@ async def generate_team_report(
             "message": "Team not found"
         }
     
-    # Get robot info
-    robot_info = "无机器人信息" if language == "zh" else "No robot information"
-    if include_robot:
-        statement = select(Robot).where(Robot.team_id == team_id)
-        robots = session.exec(statement).all()
-        if robots:
-            robot = robots[0]  # Use first robot
-            if language == "zh":
-                robot_info = f"""
+    # Initialize variables
+    robots = []
+    drivers = []
+    
+    # If custom_context provided, use it directly (includes robot + driver info)
+    if custom_context:
+        combined_info = custom_context
+    else:
+        # Get robot info from database
+        robot_info = "无机器人信息" if language == "zh" else "No robot information"
+        if include_robot:
+            statement = select(Robot).where(Robot.team_id == team_id)
+            robots = session.exec(statement).all()
+            if robots:
+                robot = robots[0]  # Use first robot
+                if language == "zh":
+                    robot_info = f"""
 - 底盘类型: {robot.robot_base}
 - 可折叠: {'是' if robot.foldable else '否'}
 - 传动系统: {robot.drivetrain}
 - 轮子数量: {robot.tire_count}
 - 备注: {robot.notes or '无'}
 """
-            else:
-                robot_info = f"""
+                else:
+                    robot_info = f"""
 - Robot Base: {robot.robot_base}
 - Foldable: {'Yes' if robot.foldable else 'No'}
 - Drivetrain: {robot.drivetrain}
 - Tire Count: {robot.tire_count}
 - Notes: {robot.notes or 'None'}
 """
-    
-    # Get driver info
-    driver_info = "无驾驶员信息" if language == "zh" else "No driver information"
-    if include_driver:
-        statement = select(Driver).where(Driver.team_id == team_id)
-        drivers = session.exec(statement).all()
-        if drivers:
-            driver = drivers[0]  # Use first driver
-            if language == "zh":
-                driver_info = f"""
+        
+        # Get driver info from database
+        driver_info = "无驾驶员信息" if language == "zh" else "No driver information"
+        if include_driver:
+            statement = select(Driver).where(Driver.team_id == team_id)
+            drivers = session.exec(statement).all()
+            if drivers:
+                driver = drivers[0]  # Use first driver
+                if language == "zh":
+                    driver_info = f"""
 - 姓名: {driver.driver_name}
 - 风格: {driver.playstyle}
 - 喜欢抓取: {'是' if driver.likes_claw else '否'}
@@ -72,8 +81,8 @@ async def generate_team_report(
 - 速度偏好: {driver.speed_preference}
 - 备注: {driver.notes or '无'}
 """
-            else:
-                driver_info = f"""
+                else:
+                    driver_info = f"""
 - Name: {driver.driver_name}
 - Playstyle: {driver.playstyle}
 - Likes Claw: {'Yes' if driver.likes_claw else 'No'}
@@ -81,6 +90,8 @@ async def generate_team_report(
 - Speed Preference: {driver.speed_preference}
 - Notes: {driver.notes or 'None'}
 """
+        
+        combined_info = f"## 机器人配置\n{robot_info}\n\n## 驾驶员习惯\n{driver_info}" if language == "zh" else f"## Robot Configuration\n{robot_info}\n\n## Driver Habits\n{driver_info}"
     
     # Get match stats
     stats = calculate_team_stats(session, team_id, event_id)
@@ -115,8 +126,7 @@ async def generate_team_report(
         team_name=team.team_name,
         organization=team.organization or "Unknown",
         region=team.region or "Unknown",
-        robot_info=robot_info,
-        driver_info=driver_info,
+        combined_info=combined_info,
         total_matches=stats['total_matches'],
         win_rate=stats['win_rate'],
         avg_score=stats['avg_score'],

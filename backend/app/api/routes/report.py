@@ -22,7 +22,8 @@ async def generate_report(
             include_map=request.include_map,
             include_driver=request.include_driver,
             include_robot=request.include_robot,
-            language=request.language
+            language=request.language,
+            custom_context=request.custom_context
         )
         
         return ReportResponse(**result)

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Markdown 渲染测试</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            padding: 40px; 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            background: #f5f5f5; 
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #667eea; border-bottom: 3px solid #667eea; padding-bottom: 10px; }
+        h2 { color: #764ba2; margin-top: 30px; }
+        h3 { color: #457b9d; margin-top: 20px; }
+        .markdown-body strong { font-weight: 600; color: #2c3e50; }
+        .markdown-body ul, .markdown-body ol { margin-left: 20px; padding-left: 20px; }
+        .markdown-body li { margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Markdown 渲染测试</h1>
+        <div class="markdown-body" id="content"></div>
+    </div>
+    
+    <script>
+        const markdown = `
+# VEX V5 Pushback 针对性分析报告
+
+## 1. 对手战队概况
+
+该队伍表现**强劲**，需要重点关注。
+
+### 基本信息
+- 队号: 16610A
+- 队名: Snacky Cakes
+- 胜率: 60.4%
+
+## 2. 对手机器人配置分析
+
+**优势**：
+- 使用 sbot 类型机器人
+- 具有良好的推力
+
+**弱点**：
+- 转向速度较慢
+- 可被快速机器人干扰
+
+## 3. 反制策略
+
+1. 前期保持防守态势
+2. 利用速度优势
+3. 避免正面碰撞
+`;
+        
+        document.getElementById('content').innerHTML = marked.parse(markdown);
+    </script>
+</body>
+</html>
