@@ -1,0 +1,9 @@
+{
+  "name": "rscoutx-frontend",
+  "version": "1.0.0",
+  "description": "VEX V5 Pushback Scout Frontend",
+  "scripts": {
+    "start": "python -m http.server 3000",
+    "dev": "python -m http.server 3000"
+  }
+}
