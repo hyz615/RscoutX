@@ -44,3 +44,26 @@ htmlcov/
 # Frontend
 node_modules/
 frontend/node_modules/
+
+# Temporary documentation files (auto-generated)
+# Keep only essential docs: README.md, UBUNTU_DEPLOY.md
+*_FIX*.md
+*_GUIDE.md
+*_SUMMARY.md
+*_UPDATE.md
+*_DEBUG.md
+*_SOLUTION.md
+*_FEATURE.md
+*_SETUP.md
+*_EXAMPLES.md
+BUGFIX*.md
+CHANGELOG.md
+CHECKLIST.md
+CURRENT_STATUS.md
+PROJECT_SUMMARY.md
+QUICKSTART*.md
+QUICK_STATUS.txt
+
+# Keep these important docs
+!README.md
+!UBUNTU_DEPLOY.md
