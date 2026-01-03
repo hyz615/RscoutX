@@ -1,0 +1,14 @@
+[Unit]
+Description=RscoutX VEX Robotics Scouting System
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/path/to/RscoutX/backend
+ExecStart=/path/to/RscoutX/backend/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 80
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
