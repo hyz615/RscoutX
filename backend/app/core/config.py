@@ -1,3 +1,4 @@
+import os
 from typing import List, Optional
 from pydantic_settings import BaseSettings
 from pydantic import Field
@@ -35,7 +36,8 @@ class Settings(BaseSettings):
     ROBOTEVENTS_API_KEY: Optional[str] = None  # Add your RobotEvents API key here
     
     # Path Rendering
-    MAP_IMAGE_PATH: str = "../pushback_map.png"
+    # Use absolute path to avoid issues with working directory
+    MAP_IMAGE_PATH: str = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "pushback_map.png")
     DEFAULT_MAP_WIDTH: int = 3600
     DEFAULT_MAP_HEIGHT: int = 3600
     FIELD_WIDTH_MM: int = 3600

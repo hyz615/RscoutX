@@ -47,11 +47,31 @@ class PathRenderer:
         
     def load_map(self) -> Image.Image:
         """Load the field map image"""
-        if not os.path.exists(self.map_path):
+        # Convert to absolute path if it's relative
+        map_path = os.path.abspath(self.map_path)
+        
+        if not os.path.exists(map_path):
+            print(f"⚠️  警告: 地图文件未找到: {map_path}")
+            print(f"   当前工作目录: {os.getcwd()}")
+            print(f"   配置路径: {self.map_path}")
+            # Try alternative locations
+            alternatives = [
+                os.path.join(os.getcwd(), "pushback_map.png"),
+                os.path.join(os.path.dirname(os.getcwd()), "pushback_map.png"),
+                os.path.join(os.path.dirname(os.path.dirname(__file__)), "..", "..", "pushback_map.png")
+            ]
+            for alt_path in alternatives:
+                alt_path = os.path.abspath(alt_path)
+                if os.path.exists(alt_path):
+                    print(f"✅ 找到地图文件: {alt_path}")
+                    self.map_path = alt_path
+                    return Image.open(alt_path).convert('RGB')
+            
             # Create blank map if not exists
+            print("   使用默认空白地图")
             img = Image.new('RGB', (settings.DEFAULT_MAP_WIDTH, settings.DEFAULT_MAP_HEIGHT), 'white')
             return img
-        return Image.open(self.map_path).convert('RGB')
+        return Image.open(map_path).convert('RGB')
     
     def convert_coordinates(self, points: List[PathPoint], 
                           coordinate_system: str, 

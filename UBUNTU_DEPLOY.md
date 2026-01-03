@@ -8,7 +8,23 @@
 
 ##  快速启动
 
-### 0. 安装系统依赖（重要！）
+### 0. 检查项目结构（重要！）
+```bash
+# 确保项目结构正确
+ls -la
+# 必须包含以下文件和目录:
+# - backend/           # 后端代码
+# - frontend/          # 前端代码
+# - pushback_map.png   # 场地地图（必须在根目录）
+# - *.sh               # 启动脚本
+
+# 如果 pushback_map.png 不存在，请从 frontend 目录复制
+if [ ! -f "pushback_map.png" ]; then
+    cp frontend/pushback_map.png . 2>/dev/null || echo "警告: pushback_map.png 未找到"
+fi
+```
+
+### 1. 安装系统依赖（重要！）
 ```bash
 # 方式 A: 使用一键安装脚本（推荐）
 chmod +x install_dependencies.sh
@@ -21,28 +37,28 @@ sudo apt-get install -y libgl1-mesa-glx libglib2.0-0
 sudo apt-get install -y build-essential gcc
 ```
 
-### 1. 设置权限
+### 2. 设置权限
 ```bash
 chmod +x *.sh
 ```
 
-### 1.5. 验证部署环境（可选但推荐）
+### 3. 验证部署环境（可选但推荐）
 ```bash
 ./check_deploy.sh
 ```
 这会检查所有依赖和项目结构是否正确。
 
-### 2. 启动服务（后台运行）
+### 4. 启动服务（后台运行）
 ```bash
 sudo ./start_daemon.sh
 ```
 
-### 3. 查看状态
+### 5. 查看状态
 ```bash
 ./status.sh
 ```
 
-### 4. 查看日志
+### 6. 查看日志
 ```bash
 tail -f logs/rscoutx.log
 ```

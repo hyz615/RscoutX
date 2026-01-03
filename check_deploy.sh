@@ -25,6 +25,18 @@ else
     echo "  ❌ backend 目录不存在"
 fi
 
+# 检查场地地图文件
+if [ -f "pushback_map.png" ]; then
+    echo "  ✅ pushback_map.png 存在（根目录）"
+else
+    echo "  ⚠️  pushback_map.png 不存在（根目录）"
+    if [ -f "frontend/pushback_map.png" ]; then
+        echo "     💡 提示: 可以从 frontend 目录复制: cp frontend/pushback_map.png ."
+    else
+        echo "     ❌ frontend/pushback_map.png 也不存在"
+    fi
+fi
+
 echo ""
 
 # 检查 Python
