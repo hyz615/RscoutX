@@ -747,8 +747,13 @@
     </div>
 
     <script>
-        // Configuration
-        const API_BASE = 'http://localhost:8000/api';
+        // Configuration - Auto-detect API base URL
+        // If on same domain/port, use relative path; otherwise use localhost:8000
+        const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? `http://${window.location.hostname}:${window.location.port || 8000}/api`
+            : `${window.location.origin}/api`;
+        
+        console.log('API Base URL:', API_BASE);
         
         // Global State
         let currentTeamData = null;
