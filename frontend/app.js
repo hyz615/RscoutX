@@ -225,8 +225,38 @@ async function loadBaseMap() {
             showMessage('Using blank map. Click to add points.', 'info');
         };
         
-        // Try to load the map image
-        img.src = '../pushback_map.png';
+        // Try multiple possible paths for the map image
+        const possiblePaths = [
+            '/pushback_map.png',            // Root of server (backend serves this)
+            './pushback_map.png',           // Same directory as HTML
+            '../pushback_map.png',          // Parent directory
+            'pushback_map.png'              // Current directory
+        ];
+        
+        let loaded = false;
+        for (const path of possiblePaths) {
+            img.onerror = null; // Reset error handler
+            img.onload = null;  // Reset load handler
+            
+            img.onload = function() {
+                console.log(`✓ Map loaded from: ${path}`);
+                loaded = true;
+            };
+            
+            img.onerror = function() {
+                console.log(`✗ Failed to load from: ${path}`);
+            };
+            
+            img.src = path;
+            
+            // Wait a bit to see if it loads
+            await new Promise(resolve => setTimeout(resolve, 100));
+            if (loaded) break;
+        }
+        
+        if (!loaded) {
+            console.warn('Could not load pushback_map.png from any path');
+        }
         
     } catch (error) {
         console.error('Error loading map:', error);

@@ -45,9 +45,26 @@ app.include_router(report.router, prefix=settings.API_V1_PREFIX)
 
 # Mount static files (frontend)
 frontend_dir = Path(__file__).parent.parent.parent / "frontend"
+root_dir = Path(__file__).parent.parent.parent
+
 if frontend_dir.exists() and os.path.isdir(frontend_dir):
     # Mount static files for assets
     app.mount("/static", StaticFiles(directory=str(frontend_dir)), name="static")
+    
+    # Serve pushback_map.png from root directory
+    @app.get("/pushback_map.png")
+    async def serve_map():
+        map_file = root_dir / "pushback_map.png"
+        if map_file.exists():
+            return FileResponse(str(map_file))
+        # Fallback to frontend directory
+        frontend_map = frontend_dir / "pushback_map.png"
+        if frontend_map.exists():
+            return FileResponse(str(frontend_map))
+        return JSONResponse(
+            status_code=404,
+            content={"detail": "pushback_map.png not found"}
+        )
     
     # Serve index.html at root
     @app.get("/")
