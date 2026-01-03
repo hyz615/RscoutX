@@ -36,12 +36,13 @@ if [ ! -d "venv" ]; then
     python3 -m venv venv
 fi
 
-# 激活虚拟环境并启动
-echo "🔧 启动后台进程..."
-source venv/bin/activate
-pip install -r requirements.txt > /dev/null 2>&1
+# 安装依赖
+echo "🔧 安装依赖..."
+venv/bin/pip install -r requirements.txt > /dev/null 2>&1
 
-nohup uvicorn app.main:app --host 0.0.0.0 --port 80 > ../logs/rscoutx.log 2>&1 &
+# 启动后台进程
+echo "🚀 启动后台进程..."
+nohup venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 80 > ../logs/rscoutx.log 2>&1 &
 
 # 保存 PID
 echo $! > ../logs/rscoutx.pid
