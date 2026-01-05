@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>国际化测试</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .lang-switcher {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .lang-btn {
+            padding: 10px 20px;
+            border: 2px solid #667eea;
+            background: white;
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        .lang-btn.active {
+            background: #667eea;
+            color: white;
+        }
+        .section {
+            background: #f7fafc;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        h2 {
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <script src="i18n-simple.js"></script>
+    
+    <div class="lang-switcher">
+        <button class="lang-btn active" id="langZh" onclick="switchLang('zh')">🇨🇳 中文</button>
+        <button class="lang-btn" id="langEn" onclick="switchLang('en')">🇺🇸 English</button>
+    </div>
+    
+    <h1>RscoutX 国际化测试</h1>
+    
+    <div class="section">
+        <h2>🔍 队伍搜索</h2>
+        <p>队伍编号 Team Number</p>
+        <input type="text" placeholder="例如: 1234A, 5678B, 9999C" style="padding: 8px; width: 100%;">
+        <button style="margin-top: 10px; padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            <span>🔎 搜索历史数据</span>
+        </button>
+        <p style="margin-top: 10px; color: #718096;">💡 将自动加载该队伍在所有赛事中的历史数据和统计信息</p>
+    </div>
+    
+    <div class="section">
+        <h2>📊 队伍历史信息与数据统计</h2>
+        <ul>
+            <li>队伍编号</li>
+            <li>队伍名称</li>
+            <li>所属组织</li>
+            <li>地区</li>
+            <li>参赛次数</li>
+            <li>总比赛数</li>
+            <li>历史胜率</li>
+            <li>平均得分</li>
+            <li>最高得分</li>
+            <li>Auton 估算分</li>
+        </ul>
+        <h3>📅 近期比赛记录</h3>
+    </div>
+    
+    <div class="section">
+        <h2>🗺️ Auton 路径绘制</h2>
+        <p>💡 点击画布添加 Auton 路径点，支持多条 Auton 路径绘制与管理</p>
+        <p>绘制模式: <label><input type="radio" name="mode"> 点击添加</label> <label><input type="radio" name="mode"> 手动输入</label></p>
+        <p>X 坐标: <input type="number" style="width: 80px;"></p>
+        <p>Y 坐标: <input type="number" style="width: 80px;"></p>
+        <button style="padding: 8px 16px; margin: 5px;">添加点</button>
+        <button style="padding: 8px 16px; margin: 5px;">新建 Auton</button>
+        <button style="padding: 8px 16px; margin: 5px;">删除当前 Auton</button>
+        <button style="padding: 8px 16px; margin: 5px;">清空当前 Auton</button>
+        <button style="padding: 8px 16px; margin: 5px;">保存 Auton</button>
+        <button style="padding: 8px 16px; margin: 5px;">加载 Auton</button>
+    </div>
+    
+    <div class="section">
+        <h2>🤖 机器人状态标注</h2>
+        <button style="margin: 5px; padding: 8px 16px;">推物块</button>
+        <button style="margin: 5px; padding: 8px 16px;">吸入</button>
+        <button style="margin: 5px; padding: 8px 16px;">释放</button>
+        <button style="margin: 5px; padding: 8px 16px;">移动</button>
+        <button style="margin: 5px; padding: 8px 16px;">待机</button>
+        <p>设置为当前状态</p>
+    </div>
+    
+    <div class="section">
+        <h2>📝 驾驶员笔记</h2>
+        <textarea placeholder="记录驾驶习惯、策略偏好、特殊技巧等..." style="width: 100%; padding: 10px; height: 100px;"></textarea>
+        <p>自动保存</p>
+    </div>
+    
+    <div class="section">
+        <h2>🖨️ 打印预览</h2>
+        <button style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">打印报告</button>
+    </div>
+    
+    <script>
+        function switchLang(lang) {
+            if (typeof i18n !== 'undefined') {
+                i18n.setLanguage(lang);
+                document.getElementById('langZh').classList.toggle('active', lang === 'zh');
+                document.getElementById('langEn').classList.toggle('active', lang === 'en');
+                
+                // 更新 HTML lang 属性
+                document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+                
+                console.log('Language switched to:', lang);
+            } else {
+                console.error('i18n not loaded');
+            }
+        }
+        
+        // 初始化按钮状态
+        window.addEventListener('DOMContentLoaded', function() {
+            const currentLang = i18n ? i18n.getLanguage() : 'zh';
+            document.getElementById('langZh').classList.toggle('active', currentLang === 'zh');
+            document.getElementById('langEn').classList.toggle('active', currentLang === 'en');
+        });
+    </script>
+</body>
+</html>

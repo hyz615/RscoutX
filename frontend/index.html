@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -61,35 +61,43 @@
             opacity: 0.9;
         }
         
-        .lang-switch {
+        /* Language Switcher */
+        .language-switcher {
             position: absolute;
-            top: 30px;
+            top: 20px;
             right: 30px;
             display: flex;
             gap: 10px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            padding: 5px;
+            align-items: center;
         }
         
-        .lang-btn {
-            padding: 8px 16px;
-            border: none;
-            background: transparent;
+        .language-switcher .lang-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
             color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
             cursor: pointer;
-            border-radius: 15px;
-            font-weight: bold;
-            transition: all 0.3s;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.3s ease;
         }
         
-        .lang-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
+        .language-switcher .lang-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
         }
         
-        .lang-btn.active {
+        .language-switcher .lang-btn.active {
             background: white;
             color: var(--primary);
+            border-color: white;
+        }
+        
+        .language-switcher .lang-icon {
+            font-size: 1.2em;
+            margin-right: 5px;
         }
         
         /* Main Content */
@@ -542,14 +550,26 @@
             }
         }
     </style>
-    <script src="i18n.js"></script>
 </head>
 <body>
+    <!-- Load i18n first - using simplified version -->
+    <script src="i18n-simple.js"></script>
+    
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <h1>🤖 RscoutX</h1>
-            <p>VEX Pushback 智能侦察与分析系统</p>
+            <!-- Language Switcher -->
+            <div class="language-switcher">
+                <button class="lang-btn active" id="langZh" onclick="switchLanguage('zh')">
+                    <span class="lang-icon">🇨🇳</span> 中文
+                </button>
+                <button class="lang-btn" id="langEn" onclick="switchLanguage('en')">
+                    <span class="lang-icon">🇺🇸</span> English
+                </button>
+            </div>
+            
+            <h1 data-i18n="title">🤖 RscoutX</h1>
+            <p data-i18n="subtitle">VEX Pushback 智能侦察与分析系统</p>
         </div>
 
         <div class="main-content">
@@ -781,9 +801,10 @@
 
     <script>
         // Configuration - Auto-detect API base URL
-        // If on same domain/port, use relative path; otherwise use localhost:8000
+        // API Base URL Configuration
+        // Always use port 8000 for API in development
         const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-            ? `http://${window.location.hostname}:${window.location.port || 8000}/api`
+            ? `http://${window.location.hostname}:8000/api`
             : `${window.location.origin}/api`;
         
         console.log('API Base URL:', API_BASE);
@@ -1929,6 +1950,43 @@ ${totalMatches > 0 ? `
         // Driver notes auto-save
         document.getElementById('driverNotes').addEventListener('input', function() {
             triggerAutoSave();
+        });
+        
+        // Language switcher function
+        function switchLanguage(lang) {
+            if (typeof i18n === 'undefined') {
+                console.error('i18n not loaded');
+                showMessage('Language system not loaded', 'error');
+                return;
+            }
+            
+            try {
+                i18n.setLanguage(lang);
+                
+                // Update button active state
+                const zhBtn = document.getElementById('langZh');
+                const enBtn = document.getElementById('langEn');
+                if (zhBtn && enBtn) {
+                    zhBtn.classList.toggle('active', lang === 'zh');
+                    enBtn.classList.toggle('active', lang === 'en');
+                }
+                
+                showMessage(lang === 'zh' ? '已切换到中文' : 'Switched to English', 'info');
+            } catch (error) {
+                console.error('Error switching language:', error);
+                showMessage('Error switching language', 'error');
+            }
+        }
+        
+        // Initialize language buttons on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            const currentLang = i18n ? i18n.getLanguage() : 'zh';
+            const zhBtn = document.getElementById('langZh');
+            const enBtn = document.getElementById('langEn');
+            if (zhBtn && enBtn) {
+                zhBtn.classList.toggle('active', currentLang === 'zh');
+                enBtn.classList.toggle('active', currentLang === 'en');
+            }
         });
         
         // Initialize on load
